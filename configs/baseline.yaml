@@ -1,0 +1,22 @@
+# Baseline benchmark configuration
+# BF16, TP=1, no quantization
+model_dir: ~/models/llama-3.1-8b-instruct
+
+# Batch size sweep
+batch_sizes: [1, 8, 32, 64]
+
+# Output length sweep (per batch size)
+output_lengths: [128, 256, 512]
+
+# Input sequence length (fixed)
+input_len: 128
+
+# Warmup and measurement runs
+num_warmup: 3
+num_runs: 10
+
+# Engine build settings
+dtype: bf16
+tp_size: 1
+max_batch_size: 128
+max_seq_len: 4096

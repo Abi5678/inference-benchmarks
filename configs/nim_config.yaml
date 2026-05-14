@@ -1,0 +1,17 @@
+# NIM deployment benchmark configuration
+base_url: http://localhost:8000
+
+# NIM container settings
+nim_image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
+nim_container_name: inference-bench-nim
+
+# Load test settings
+num_requests: 50
+concurrency_levels: [1, 5, 10, 25, 50]
+output_lengths: [64, 128, 256, 512]
+input_len: 128
+max_tokens: 256
+
+# GPU settings
+gpu_device: 0
+max_gpu_memory_mb: 20000

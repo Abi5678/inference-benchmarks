@@ -1,0 +1,25 @@
+# Environment
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Results (keep structure, ignore raw data)
+results/raw/*.json
+
+# Models (don't commit 50GB)
+models/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Secrets
+.env
+.ngc_key

@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  # NIM inference microservice
+  nim:
+    image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
+    container_name: inference-bench-nim
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NGC_API_KEY=${NGC_API_KEY}
+      - NIM_MODEL_PROFILE=latency
+    ports:
+      - "8000:8000"
+    volumes:
+      - nim-cache:/opt/nim/.cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 120s
+    restart: unless-stopped
+
+  # Benchmark runner (separate container to isolate measurement)
+  benchmark:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.benchmark
+    container_name: inference-bench-runner
+    runtime: nvidia
+    depends_on:
+      nim:
+        condition: service_healthy
+    environment:
+      - NIM_BASE_URL=http://nim:8000
+    volumes:
+      - ../results:/workspace/results
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+volumes:
+  nim-cache:

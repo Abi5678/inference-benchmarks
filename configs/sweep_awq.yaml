@@ -1,0 +1,20 @@
+# AWQ 4-bit quantization sweep configuration
+model_dir: ~/models/llama-3.1-8b-instruct
+
+# AWQ engine settings
+dtype: fp16
+quantization: awq
+tp_size: 1
+max_batch_size: 128
+max_seq_len: 4096
+
+# Batch size sweep for AWQ
+batch_sizes: [1, 8, 32, 64]
+
+input_len: 128
+output_lengths: [256]
+num_warmup: 3
+num_runs: 10
+
+# AWQ uses group_size=128 for Llama 3.1
+awq_group_size: 128

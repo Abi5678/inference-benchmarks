@@ -1,0 +1,19 @@
+# FP8 quantization sweep configuration
+model_dir: ~/models/llama-3.1-8b-instruct
+
+# FP8 engine settings
+dtype: fp8
+tp_size: 1
+max_batch_size: 128
+max_seq_len: 4096
+
+# Batch size sweep for FP8
+batch_sizes: [1, 8, 32, 64, 128]
+
+input_len: 128
+output_lengths: [256]
+num_warmup: 3
+num_runs: 10
+
+# FP8 uses INT8 KV cache for additional memory savings
+kv_cache_dtype: fp8
