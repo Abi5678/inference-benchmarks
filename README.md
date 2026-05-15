@@ -54,6 +54,23 @@ inference-benchmarks/
 - **TensorRT-LLM:** v0.21+
 - **Docker + NVIDIA Container Toolkit** (for NIM benchmarks)
 
+## Google Colab (GPU notebook)
+
+Use this if you want a hosted **GPU runtime** without installing TensorRT-LLM locally. The notebook detects VRAM, tries TensorRT-LLM when compatible, and falls back to Hugging Face Transformers.
+
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Abi5678/inference-benchmarks/blob/main/inference-benchmarks-colab.ipynb)
+
+**Runtime:** **Runtime → Change runtime type → GPU** (T4 on free tier when available).
+
+**Colab secrets (sidebar → 🔑):**
+
+| Name | Purpose |
+|------|---------|
+| `HF_TOKEN` | Optional; needed for gated **Llama 3.1** weights on Hugging Face. Without it, the notebook uses **Phi-3-mini**. |
+| `NVIDIA_BUILD_API_KEY` | Optional; enables **NVIDIA NIM cloud** benchmarks via [build.nvidia.com](https://build.nvidia.com/). |
+
+After a full run, download generated artifacts (`*.png`, `inference_benchmark_report.md`, `inference_benchmark_results.csv`) if you want them in-repo under `results/colab/` (that folder is documented for those exports).
+
 ## Quick Start
 
 ### 1. Setup
