@@ -1,17 +1,40 @@
 # NIM deployment benchmark configuration
+# Updated for NIM for LLMs v1.15+ with TTFT/TPOT fixes
+
 base_url: http://localhost:8000
 
 # NIM container settings
 nim_image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
 nim_container_name: inference-bench-nim
 
+# NIM profile: "latency" for low-latency, "throughput" for high-throughput
+nim_model_profile: latency
+
 # Load test settings
-num_requests: 50
-concurrency_levels: [1, 5, 10, 25, 50]
+num_requests: 100
+concurrency_levels: [1, 5, 10, 25, 50, 100]
 output_lengths: [64, 128, 256, 512]
 input_len: 128
 max_tokens: 256
 
+# Streaming mode: more accurate TTFT measurement
+streaming: true
+
 # GPU settings
 gpu_device: 0
 max_gpu_memory_mb: 20000
+
+# Metrics to capture
+metrics:
+  - ttft_p50
+  - ttft_p95
+  - ttft_p99
+  - tpot_mean
+  - tpot_p95
+  - throughput_tps
+  - requests_per_sec
+  - latency_p50
+  - latency_p99
+  - gpu_power_watts
+  - gpu_memory_used_mb
+  - gpu_utilization_pct

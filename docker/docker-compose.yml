@@ -1,55 +1,59 @@
-version: "3.8"
+# Inference Benchmarks - Docker Compose (Updated for TRT-LLM v0.21+)
+# Spins up NIM + benchmark runner side by side.
 
 services:
-  # NIM inference microservice
-  nim:
+  # NIM container for LLM serving
+  nim-server:
     image: nvcr.io/nim/meta/llama-3.1-8b-instruct:latest
-    container_name: inference-bench-nim
+    container_name: inference-nim
     runtime: nvidia
     environment:
-      - NVIDIA_VISIBLE_DEVICES=all
       - NGC_API_KEY=${NGC_API_KEY}
-      - NIM_MODEL_PROFILE=latency
+      - NIM_CACHE_PATH=/opt/nim/.cache
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     ports:
       - "8000:8000"
     volumes:
       - nim-cache:/opt/nim/.cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 20
+      start_period: 300s
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
-      interval: 10s
-      timeout: 5s
-      retries: 60
-      start_period: 120s
-    restart: unless-stopped
+    shm_size: 16g
 
-  # Benchmark runner (separate container to isolate measurement)
+  # Benchmark runner (runs against nim-server)
   benchmark:
     build:
       context: ..
       dockerfile: docker/Dockerfile.benchmark
-    container_name: inference-bench-runner
+    container_name: inference-benchmark
     runtime: nvidia
-    depends_on:
-      nim:
-        condition: service_healthy
     environment:
-      - NIM_BASE_URL=http://nim:8000
+      - NIM_BASE_URL=http://nim-server:8000
+      - NVIDIA_VISIBLE_DEVICES=all
     volumes:
       - ../results:/workspace/results
+    depends_on:
+      nim-server:
+        condition: service_healthy
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
+    command: ["python3", "scripts/run_benchmarks.py", "--phase", "all"]
 
 volumes:
   nim-cache:

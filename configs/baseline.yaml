@@ -1,9 +1,20 @@
-# Baseline benchmark configuration
-# BF16, TP=1, no quantization
+# Baseline benchmark configuration (updated for trtllm-bench v0.21+)
+# Uses --dataset flag with synthetic prompts via prepare_dataset
+# Reference: https://nvidia.github.io/TensorRT-LLM/developer-guide/perf-benchmarking.html
+
 model_dir: ~/models/llama-3.1-8b-instruct
 
+# Dataset configuration
+dataset:
+  # ISL/OSL: Input/Output sequence lengths
+  isl: 128
+  osl: 128
+  num_samples: 100
+  # Dataset file generated at setup time
+  file: results/synthetic_dataset_128_128.jsonl
+
 # Batch size sweep
-batch_sizes: [1, 8, 32, 64]
+batch_sizes: [1, 8, 32, 64, 128]
 
 # Output length sweep (per batch size)
 output_lengths: [128, 256, 512]
@@ -18,5 +29,12 @@ num_runs: 10
 # Engine build settings
 dtype: bf16
 tp_size: 1
+pp_size: 1
 max_batch_size: 128
 max_seq_len: 4096
+
+# trtllm-bench backend options
+backend: pytorch  # pytorch | tensorrt
+
+# Streaming mode (measures TTFT per request)
+streaming: true

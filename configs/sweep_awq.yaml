@@ -1,20 +1,34 @@
-# AWQ 4-bit quantization sweep configuration
+# AWQ 4-bit quantization sweep configuration (updated for v0.21+)
+# AWQ provides ~4x memory reduction, enabling larger batches on limited VRAM
+# Quality impact is minimal for instruction-following tasks
+
 model_dir: ~/models/llama-3.1-8b-instruct
 
 # AWQ engine settings
 dtype: fp16
 quantization: awq
 tp_size: 1
-max_batch_size: 128
+pp_size: 1
+max_batch_size: 256
+max_num_tokens: 8192
 max_seq_len: 4096
 
-# Batch size sweep for AWQ
-batch_sizes: [1, 8, 32, 64]
+# Build flags
+build_flags:
+  multiple_profiles: true
+  use_paged_context_fmha: true
+  gemm_plugin: auto
+
+# Batch size sweep for AWQ (larger batches possible with 4-bit)
+batch_sizes: [1, 8, 32, 64, 128, 256]
 
 input_len: 128
-output_lengths: [256]
+output_lengths: [128, 256]
 num_warmup: 3
 num_runs: 10
 
 # AWQ uses group_size=128 for Llama 3.1
 awq_group_size: 128
+
+# AWQ checkpoint source
+checkpoint: meta-llama/Meta-Llama-3.1-8B-Instruct-AWQ

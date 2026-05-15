@@ -1,0 +1,55 @@
+# Advanced TensorRT-LLM build-time flags configuration
+# Based on official TRT-LLM performance tuning guide (v0.21+)
+# Reference: https://nvidia.github.io/TensorRT-LLM/performance/performance-tuning-guide/
+
+model_dir: ~/models/llama-3.1-8b-instruct
+
+# --- Build Config (BuildConfig) ---
+dtype: bf16
+tp_size: 1
+pp_size: 1
+max_batch_size: 3840
+max_num_tokens: 7680
+max_seq_len: 4096
+
+# Build-time optimization flags (cumulative)
+build_flags:
+  # Multiple profiles: Always enable. Better kernel selection at runtime.
+  # Increases build time but zero runtime overhead. Recommended for production.
+  multiple_profiles: true
+
+  # Paged context FMHA: Chunks context phase for large prompts.
+  # Essential for long-context workloads. <2% worst case overhead.
+  use_paged_context_fmha: true
+
+  # GEMM plugin: Uses cuBLASLt custom kernels for GEMM ops.
+  # Recommended for FP16/BF16. Disable for FP8.
+  gemm_plugin: "auto"  # auto matches model dtype
+
+  # Reduce norm fusion: Fuses ResidualAdd + LayerNorm into AllReduce kernel.
+  # Only beneficial with TP > 1. Best for generation-heavy workloads.
+  reduce_fusion: true  # set false if only PP used
+
+# --- Runtime Config ---
+runtime:
+  # Scheduling policy: GUARANTEED_NO_EVICT is default, safest
+  scheduling_policy: "GUARANTEED_NO_EVICT"
+
+  # KV cache memory percentage
+  kv_memory_percentage: 0.90
+
+  # CUDA graph config (for decode-phase capture)
+  cuda_graph:
+    enabled: true
+    max_batch_size: 3840
+    padding_enabled: true
+
+# --- Benchmark Config ---
+benchmark:
+  batch_sizes: [1, 8, 32, 64, 128, 256]
+  input_len: 128
+  output_lengths: [128, 256, 512, 1024]
+  concurrency_levels: [1, 10, 50, 100, 200]
+  num_warmup: 3
+  num_runs: 10
+  dataset_size: 100

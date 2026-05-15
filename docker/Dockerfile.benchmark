@@ -1,5 +1,5 @@
-# Inference Benchmarks - GPU Environment
-# Use this Dockerfile for a self-contained benchmark environment on any NVIDIA GPU host.
+# Inference Benchmarks - GPU Environment (Updated for TRT-LLM v0.21+)
+# Self-contained benchmark environment for any NVIDIA GPU host.
 
 FROM nvcr.io/nvidia/cuda:12.4.1-devel-ubuntu22.04
 
@@ -9,25 +9,27 @@ ENV PATH="/root/miniconda3/bin:${PATH}"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3.10 python3.10-venv python3-pip \
-    git wget curl \
+    python3.10 python3.10-venv python3-pip python3.10-dev \
+    git git-lfs wget curl jq \
     && rm -rf /var/lib/apt/lists/*
 
-# Install TensorRT-LLM
-RUN pip install --no-cache-dir tensorrt-llm \
+# Install TensorRT-LLM v0.21+ (includes trtllm-bench, trtllm-build, trtllm-serve)
+RUN pip install --no-cache-dir tensorrt-llm>=0.21.0 \
     --extra-index-url https://pypi.nvidia.com
 
-# Install benchmark tools
+# Install benchmark dependencies
 RUN pip install --no-cache-dir \
-    pyyaml matplotlib numpy requests \
-    locust k6
+    pyyaml matplotlib numpy pandas requests aiohttp
 
-# Install trtllm-bench
-RUN trtllm-bench --help || true
+# Install GenAI-Perf for NIM benchmarking
+RUN pip install --no-cache-dir genai-perf || true
+
+# Verify installation
+RUN trtllm-bench --help 2>/dev/null || echo "trtllm-bench not found in PATH"
 
 # Create workspace
 WORKDIR /workspace
 COPY . /workspace/
 
-# Default: run full benchmark suite
-CMD ["python3", "scripts/run_benchmarks.py", "--phase", "all"]
+# Default: show help
+CMD ["python3", "scripts/run_benchmarks.py", "--help"]

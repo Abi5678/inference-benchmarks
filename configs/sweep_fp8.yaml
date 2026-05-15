@@ -1,19 +1,36 @@
-# FP8 quantization sweep configuration
+# FP8 quantization sweep configuration (updated for v0.21+)
+# FP8 provides 2x memory reduction with minimal quality loss
+# Native on Hopper (H100/H200), emulated on Ampere (A10G/A100)
+
 model_dir: ~/models/llama-3.1-8b-instruct
 
 # FP8 engine settings
 dtype: fp8
 tp_size: 1
-max_batch_size: 128
+pp_size: 1
+max_batch_size: 256
+max_num_tokens: 8192
 max_seq_len: 4096
 
-# Batch size sweep for FP8
-batch_sizes: [1, 8, 32, 64, 128]
+# Build flags
+build_flags:
+  multiple_profiles: true
+  use_paged_context_fmha: true
+  gemm_plugin: disabled  # Disable GEMM plugin for FP8 (recommended)
+
+# Batch size sweep for FP8 (can go higher due to lower memory)
+batch_sizes: [1, 8, 32, 64, 128, 256]
 
 input_len: 128
-output_lengths: [256]
+output_lengths: [128, 256]
 num_warmup: 3
 num_runs: 10
 
 # FP8 uses INT8 KV cache for additional memory savings
 kv_cache_dtype: fp8
+
+# Concurrency sweep for throughput optimization
+concurrency_levels: [1, 10, 50, 100, 200, 500]
+
+# FP8 checkpoint source (NVIDIA optimized)
+checkpoint: nvidia/Llama-3.1-8B-Instruct-FP8
